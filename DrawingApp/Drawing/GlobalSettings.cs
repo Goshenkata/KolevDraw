@@ -19,6 +19,6 @@ namespace DrawingApp.Drawing
         }
 
         public Figure SelectedFigure { get; set; } = new Rectangle();
-        public Figure ManipulationFigure { get; set; } = null;
+        public Figure ManipulationFigure { get; set; }
     }
 }

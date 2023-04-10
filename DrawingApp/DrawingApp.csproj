@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="Drawing\Canvas.cs" />
     <Compile Include="Drawing\Commands\Command.cs" />
+    <Compile Include="Drawing\Commands\Move.cs" />
+    <Compile Include="Drawing\Commands\Resize.cs" />
     <Compile Include="Drawing\Figures\Circle.cs" />
     <Compile Include="Drawing\Figures\Ellipse.cs" />
     <Compile Include="Drawing\Figures\Figure.cs" />

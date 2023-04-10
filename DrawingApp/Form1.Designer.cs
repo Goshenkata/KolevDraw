@@ -121,9 +121,9 @@
             this.pictureBox1.Size = new System.Drawing.Size(1049, 564);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
-            this.pictureBox1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MouseClick);
             this.pictureBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tpMouseDown);
             this.pictureBox1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.mouseMove);
+            this.pictureBox1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MouseUp);
             // 
             // panel1
             // 

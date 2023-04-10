@@ -1,4 +1,5 @@
 ﻿using DrawingApp.Drawing;
+using DrawingApp.Drawing.Commands;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -42,7 +43,7 @@ namespace DrawingApp
             pb.MouseDown += new MouseEventHandler(tpMouseDown);
             pb.MouseMove += new MouseEventHandler(mouseMove);
             pb.Paint += new PaintEventHandler(rePaint);
-            pb.MouseClick += new MouseEventHandler(MouseClick);
+            pb.MouseUp += new MouseEventHandler(MouseUp);
 
             Canvas canvas = new Canvas();
             Project.Canvases.Add(canvas);
@@ -56,7 +57,6 @@ namespace DrawingApp
         {
             Point p = new Point(e.X, e.Y);
 
-            Console.WriteLine(selectBtn.Focused); 
             if (!selectBtn.Focused)
             {
                 isDrawing = true;
@@ -64,20 +64,33 @@ namespace DrawingApp
             }
             else
             {
-                foreach (Figure sf in Project.Canvases[tabControl.SelectedIndex].SelectionFigures)
+                GlobalSettings.Instance.SelectedFigure.Command = new Move(p);
+                foreach (Figure f in Project.Canvases[tabControl.SelectedIndex].SelectionFigures)
                 {
-                    if (sf.isPointInside(p))
+                    if (f.isPointInside(p))
                     {
-                        GlobalSettings.Instance.ManipulationFigure = sf;
+                        GlobalSettings.Instance.ManipulationFigure = f;
                         break;
                     }
                     GlobalSettings.Instance.ManipulationFigure = null;
+                    GlobalSettings.Instance.SelectedFigure.UnsetControls(tabControl.SelectedIndex);
                 }
+
+                foreach (Figure f in Project.Canvases[tabControl.SelectedIndex].Figures)
+                {
+                    if (f.isPointInside(p))
+                    {
+                        f.SetControls(tabControl.SelectedIndex);
+                        GlobalSettings.Instance.SelectedFigure = f;
+                        break;
+                    }
+                }
+                tabControl.SelectedTab.Controls[0].Invalidate();
             }
         }
-
-        private void SaveSelected(Point p)
+        private void MouseUp(object sender, MouseEventArgs e)
         {
+            Point p = new Point(e.X, e.Y);
             if (!selectBtn.Focused)
             {
                 isDrawing = false;
@@ -100,6 +113,40 @@ namespace DrawingApp
                 GlobalSettings.Instance.SelectedFigure.StartingPoint = new Point(0, 0);
                 GlobalSettings.Instance.SelectedFigure.EndingPoint = new Point(0, 0);
             }
+            else
+            {
+                GlobalSettings.Instance.ManipulationFigure = null;
+                GlobalSettings.Instance.SelectedFigure.Command = null;
+            }
+        }
+
+
+        private void mouseMove(object sender, MouseEventArgs e)
+        {
+
+            Point point = new Point(e.X, e.Y);
+            if (isDrawing)
+            {
+                GlobalSettings.Instance.SelectedFigure.EndingPoint = point;
+            }
+            else
+            {
+                if (GlobalSettings.Instance.ManipulationFigure != null)
+                {
+                    GlobalSettings.Instance.ManipulationFigure.Command.Execute(point);
+                    GlobalSettings.Instance.SelectedFigure.fixPoints();
+                }
+                else if (GlobalSettings.Instance.SelectedFigure.Command != null)
+                {
+                    GlobalSettings.Instance.SelectedFigure.Command.Execute(point);
+                    GlobalSettings.Instance.SelectedFigure.Command = new Move(point);
+                }
+                GlobalSettings.Instance.SelectedFigure.UnsetControls(tabControl.TabIndex);
+                GlobalSettings.Instance.SelectedFigure.UnsetControls(tabControl.TabIndex);
+                GlobalSettings.Instance.SelectedFigure.SetControls(tabControl.TabIndex);
+                GlobalSettings.Instance.SelectedFigure.SetControls(tabControl.TabIndex);
+            }
+            tabControl.SelectedTab.Controls[0].Invalidate();
         }
 
         private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
@@ -139,15 +186,6 @@ namespace DrawingApp
             RedrawCanvas(e.Graphics);
         }
 
-        private void mouseMove(object sender, MouseEventArgs e)
-        {
-            if (isDrawing)
-            {
-                GlobalSettings.Instance.SelectedFigure.EndingPoint =
-                    new Point(e.X, e.Y);
-                tabControl.SelectedTab.Controls[0].Invalidate();
-            }
-        }
 
 
         private void button3_Click(object sender, EventArgs e)
@@ -181,36 +219,6 @@ namespace DrawingApp
             GlobalSettings.Instance.SelectedFigure = line;
         }
 
-        private void MouseClick(object sender, MouseEventArgs e)
-        {
-            Point p = new Point(e.X, e.Y);
-            if (selectBtn.Focused)
-            {
-                foreach (Figure f in Project.Canvases[tabControl.SelectedIndex].SelectionFigures)
-                {
-                    if (f.isPointInside(p))
-                    {
-                        break;
-                    }
-                    GlobalSettings.Instance.SelectedFigure.UnsetControls(tabControl.SelectedIndex);
-                }
-
-                foreach (Figure f in Project.Canvases[tabControl.SelectedIndex].Figures)
-                {
-                    if (f.isPointInside(p))
-                    {
-                        f.SetControls(tabControl.SelectedIndex);
-                        GlobalSettings.Instance.SelectedFigure = f;
-                        break;
-                    }
-                }
-            }
-            else if (isDrawing)
-            {
-                SaveSelected(p);
-            }
-            tabControl.SelectedTab.Controls[0].Invalidate();
-        }
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using DrawingApp.Drawing;
+using DrawingApp.Drawing.Commands;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
- namespace DrawingApp
+namespace DrawingApp
 {
     public abstract class Figure : ICloneable
     {
@@ -14,11 +15,13 @@ using System.Threading.Tasks;
 
         public Point StartingPoint { get; set; } = new Point(0, 0);
         public Point EndingPoint { get; set; } = new Point(0, 0);
+        public Command Command { get; set; }
 
 
         public abstract void Draw(Graphics g);
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return $"[StartingPoint: {StartingPoint}, EndingPoint:{EndingPoint}]";
         }
         protected Figure(Figure f)
@@ -45,16 +48,18 @@ using System.Threading.Tasks;
         protected Figure() { }
         public abstract object Clone();
 
-        protected void fixPoints()
+        public void fixPoints()
         {
-            if (StartingPoint.X > EndingPoint.X)
+            bool xIsWrong = StartingPoint.X > EndingPoint.X;
+            bool yIsWrong = StartingPoint.Y > EndingPoint.Y;
+            if (xIsWrong)
             {
                 int tempX = StartingPoint.X;
                 StartingPoint = new Point(EndingPoint.X, StartingPoint.Y);
                 EndingPoint = new Point(tempX, EndingPoint.Y);
             }
 
-            if (StartingPoint.Y > EndingPoint.Y)
+            if (yIsWrong)
             {
                 int tempY = StartingPoint.Y;
                 StartingPoint = new Point(StartingPoint.X, EndingPoint.Y);
@@ -75,50 +80,59 @@ using System.Threading.Tasks;
             {
                 List<Figure> list = new List<Figure>();
 
+                int size = 6;
                 int middleX = (StartingPoint.X + EndingPoint.X) / 2;
                 int middleY = (StartingPoint.Y + EndingPoint.Y) / 2;
 
 
-                var CircleTopLeft = new Drawing.Figures.Circle();
-                CircleTopLeft.StartingPoint = new Point(StartingPoint.X - 4, StartingPoint.Y - 4);
-                CircleTopLeft.EndingPoint = new Point(StartingPoint.X + 4, StartingPoint.Y + 4);
+                var circleTopLeft = new Drawing.Figures.Circle();
+                circleTopLeft.StartingPoint = new Point(StartingPoint.X - size, StartingPoint.Y - 4);
+                circleTopLeft.EndingPoint = new Point(StartingPoint.X + size, StartingPoint.Y + 4);
+                circleTopLeft.Command = new TopLeftStretch();
 
-                var CircleTop = new Drawing.Figures.Circle();
-                CircleTop.StartingPoint = new Point(middleX - 4, StartingPoint.Y - 4);
-                CircleTop.EndingPoint = new Point(middleX + 4, StartingPoint.Y + 4);
+                var circleTop = new Drawing.Figures.Circle();
+                circleTop.StartingPoint = new Point(middleX - size, StartingPoint.Y - 4);
+                circleTop.EndingPoint = new Point(middleX + size, StartingPoint.Y + 4);
+                circleTop.Command = new TopStretch();                
 
-                var CircleTopRight = new Drawing.Figures.Circle();
-                CircleTopRight.StartingPoint = new Point(EndingPoint.X - 4, StartingPoint.Y - 4);
-                CircleTopRight.EndingPoint = new Point(EndingPoint.X + 4, StartingPoint.Y + 4);
+                var circleTopRight = new Drawing.Figures.Circle();
+                circleTopRight.StartingPoint = new Point(EndingPoint.X - size, StartingPoint.Y - 4);
+                circleTopRight.EndingPoint = new Point(EndingPoint.X + size, StartingPoint.Y + 4);
+                circleTopRight.Command = new TopRightStretch();
 
-                var CircleLeft = new Drawing.Figures.Circle();
-                CircleLeft.StartingPoint = new Point(StartingPoint.X - 4, middleY - 4);
-                CircleLeft.EndingPoint = new Point(StartingPoint.X + 4,middleY + 4);
+                var circleLeft = new Drawing.Figures.Circle();
+                circleLeft.StartingPoint = new Point(StartingPoint.X - size, middleY - 4);
+                circleLeft.EndingPoint = new Point(StartingPoint.X + size, middleY + 4);
+                circleLeft.Command = new LeftStretch();
 
-                var CircleBottomLeft = new Drawing.Figures.Circle();
-                CircleBottomLeft.StartingPoint = new Point(StartingPoint.X - 4, EndingPoint.Y - 4);
-                CircleBottomLeft.EndingPoint = new Point(StartingPoint.X + 4,EndingPoint.Y + 4);
+                var circleBottomLeft = new Drawing.Figures.Circle();
+                circleBottomLeft.StartingPoint = new Point(StartingPoint.X - size, EndingPoint.Y - 4);
+                circleBottomLeft.EndingPoint = new Point(StartingPoint.X + size, EndingPoint.Y + 4);
+                circleBottomLeft.Command = new BottomLeftStretch();
 
-                var CircleBottom = new Drawing.Figures.Circle();
-                CircleBottom.StartingPoint = new Point(middleX - 4, EndingPoint.Y - 4);
-                CircleBottom.EndingPoint = new Point(middleX + 4,EndingPoint.Y + 4);
+                var circleBottom = new Drawing.Figures.Circle();
+                circleBottom.StartingPoint = new Point(middleX - size, EndingPoint.Y - 4);
+                circleBottom.EndingPoint = new Point(middleX + size, EndingPoint.Y + 4);
+                circleBottom.Command = new BottomStretch();
 
-                var CircleBottomRight = new Drawing.Figures.Circle();
-                CircleBottomRight.StartingPoint = new Point(EndingPoint.X - 4, EndingPoint.Y - 4);
-                CircleBottomRight.EndingPoint = new Point(EndingPoint.X + 4,EndingPoint.Y + 4);
+                var circleBottomRight = new Drawing.Figures.Circle();
+                circleBottomRight.StartingPoint = new Point(EndingPoint.X - size, EndingPoint.Y - 4);
+                circleBottomRight.EndingPoint = new Point(EndingPoint.X + size, EndingPoint.Y + 4);
+                circleBottomRight.Command = new BottomRightStretch();
 
-                var CircleRight = new Drawing.Figures.Circle();
-                CircleRight.StartingPoint = new Point(EndingPoint.X - 4, middleY - 4);
-                CircleRight.EndingPoint = new Point(EndingPoint.X + 4, middleY + 4);
+                var circleRight = new Drawing.Figures.Circle();
+                circleRight.StartingPoint = new Point(EndingPoint.X - size, middleY - 4);
+                circleRight.EndingPoint = new Point(EndingPoint.X + size, middleY + 4);
+                circleRight.Command = new RightStretch();
 
-                list.Add(CircleTopLeft);
-                list.Add(CircleTop);
-                list.Add(CircleTopRight);
-                list.Add(CircleLeft);
-                list.Add(CircleBottomLeft);
-                list.Add(CircleBottom);
-                list.Add(CircleBottomRight);
-                list.Add(CircleRight);
+                list.Add(circleTopLeft);
+                list.Add(circleTop);
+                list.Add(circleTopRight);
+                list.Add(circleLeft);
+                list.Add(circleBottomLeft);
+                list.Add(circleBottom);
+                list.Add(circleBottomRight);
+                list.Add(circleRight);
 
 
                 Project.Canvases[tabIndex].SelectionFigures.AddRange(list);
