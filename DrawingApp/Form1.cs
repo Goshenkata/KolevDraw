@@ -20,12 +20,17 @@ namespace DrawingApp
             InitializeComponent();
             Project.Canvases.Add(new Canvas());
             selectBtn.LostFocus += Deselect;
-
+            Project
+                .Canvases[tabControl.SelectedIndex]
+                .Undo();
         }
 
         private void Deselect(object val, EventArgs e)
         {
-            GlobalSettings.Instance.SelectedFigure.UnsetControls(tabControl.SelectedIndex);
+            if (GlobalSettings.Instance.SelectedFigure != null)
+            {
+                GlobalSettings.Instance.SelectedFigure.UnsetControls(tabControl.SelectedIndex);
+            }
             Console.WriteLine("Deselected");
             tabControl.SelectedTab.Controls[0].Invalidate();
         }
@@ -60,10 +65,17 @@ namespace DrawingApp
             if (!selectBtn.Focused)
             {
                 isDrawing = true;
-                GlobalSettings.Instance.SelectedFigure.StartingPoint = p;
+                if (GlobalSettings.Instance.SelectedFigure != null)
+                {
+                    GlobalSettings.Instance.SelectedFigure.StartingPoint = p;
+                }
             }
-            else
+            else 
             {
+                Project.
+                    Canvases[tabControl.SelectedIndex]
+                    .PushToHistory();
+                undoToolStripMenuItem.Enabled = true;
                 GlobalSettings.Instance.SelectedFigure.Command = new Move(p);
                 foreach (Figure f in Project.Canvases[tabControl.SelectedIndex].SelectionFigures)
                 {
@@ -91,32 +103,40 @@ namespace DrawingApp
         private void MouseUp(object sender, MouseEventArgs e)
         {
             Point p = new Point(e.X, e.Y);
-            if (!selectBtn.Focused)
+            if (GlobalSettings.Instance.SelectedFigure != null)
             {
-                isDrawing = false;
-                Graphics g = tabControl.SelectedTab.CreateGraphics();
-                GlobalSettings.Instance.SelectedFigure.EndingPoint =
-                    new Point(p.X, p.Y);
-                Figure fig = (Figure)GlobalSettings.Instance.SelectedFigure.Clone();
+                if (!selectBtn.Focused)
+                {
+                    isDrawing = false;
+                    Graphics g = tabControl.SelectedTab.CreateGraphics();
+                    GlobalSettings.Instance.SelectedFigure.EndingPoint =
+                        new Point(p.X, p.Y);
+                    Figure fig = (Figure)GlobalSettings.Instance.SelectedFigure.Clone();
 
-                //swap ncessary cordinates so that the starting point
-                //is at the upper left corner and the ending point is lower right
+                    //swap ncessary cordinates so that the starting point
+                    //is at the upper left corner and the ending point is lower right
 
-                Project.
-                    Canvases
-                    .ElementAt(tabControl.SelectedIndex)
-                    .Figures
-                    .Add(fig);
-                fig.Draw(g);
-                perLbl.Text = $"Perimeter: {fig.GetPerimeter():#.##}";
-                areaLbl.Text = $"Area: {fig.GetArea():#.##}";
-                GlobalSettings.Instance.SelectedFigure.StartingPoint = new Point(0, 0);
-                GlobalSettings.Instance.SelectedFigure.EndingPoint = new Point(0, 0);
-            }
-            else
-            {
-                GlobalSettings.Instance.ManipulationFigure = null;
-                GlobalSettings.Instance.SelectedFigure.Command = null;
+                    Project.
+                        Canvases[tabControl.SelectedIndex]
+                        .PushToHistory();
+                    undoToolStripMenuItem.Enabled = true;
+
+                    Project.
+                        Canvases
+                        .ElementAt(tabControl.SelectedIndex)
+                        .Figures
+                        .Add(fig);
+                    fig.Draw(g);
+                    perLbl.Text = $"Perimeter: {fig.GetPerimeter():#.##}";
+                    areaLbl.Text = $"Area: {fig.GetArea():#.##}";
+                    GlobalSettings.Instance.SelectedFigure.StartingPoint = new Point(0, 0);
+                    GlobalSettings.Instance.SelectedFigure.EndingPoint = new Point(0, 0);
+                }
+                else
+                {
+                    GlobalSettings.Instance.ManipulationFigure = null;
+                    GlobalSettings.Instance.SelectedFigure.Command = null;
+                }
             }
         }
 
@@ -127,16 +147,19 @@ namespace DrawingApp
             Point point = new Point(e.X, e.Y);
             if (isDrawing)
             {
-                GlobalSettings.Instance.SelectedFigure.EndingPoint = point;
+                if (GlobalSettings.Instance.SelectedFigure != null)
+                {
+                    GlobalSettings.Instance.SelectedFigure.EndingPoint = point;
+                }
             }
-            else
+            else if (GlobalSettings.Instance.SelectedFigure != null)
             {
                 if (GlobalSettings.Instance.ManipulationFigure != null)
                 {
                     GlobalSettings.Instance.ManipulationFigure.Command.Execute(point);
                     GlobalSettings.Instance.SelectedFigure.fixPoints();
                 }
-                else if (GlobalSettings.Instance.SelectedFigure.Command != null)
+                else if (GlobalSettings.Instance.SelectedFigure != null && GlobalSettings.Instance.SelectedFigure.Command != null)
                 {
                     GlobalSettings.Instance.SelectedFigure.Command.Execute(point);
                     GlobalSettings.Instance.SelectedFigure.Command = new Move(point);
@@ -219,6 +242,26 @@ namespace DrawingApp
             GlobalSettings.Instance.SelectedFigure = line;
         }
 
+        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Project.Canvases[tabControl.SelectedIndex].Undo();
+            redoToolStripMenuItem.Enabled = true;
+            if (Project.Canvases[tabControl.SelectedIndex].UndoEmpty())
+            {
+                undoToolStripMenuItem.Enabled = false;
+            }
+            tabControl.SelectedTab.Controls[0].Invalidate();
+        }
 
+        private void redoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Project.Canvases[tabControl.SelectedIndex].Redo();
+            undoToolStripMenuItem.Enabled = true;
+            if (Project.Canvases[tabControl.SelectedIndex].RedoEmpty())
+            {
+                redoToolStripMenuItem.Enabled = false;
+            }
+            tabControl.SelectedTab.Controls[0].Invalidate();
+        }
     }
 }
