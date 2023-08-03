@@ -20,5 +20,7 @@ namespace DrawingApp.Drawing
 
         public Figure SelectedFigure { get; set; } = new Rectangle();
         public Figure ManipulationFigure { get; set; }
+        public FigureSettings Settings { get; set; } = new FigureSettings();
+
     }
 }

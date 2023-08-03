@@ -10,7 +10,7 @@ namespace DrawingApp.Drawing.Commands
     {
         public void Execute(Point p)
         {
-            GlobalSettings.Instance.SelectedFigure.StartingPoint = p;
+            GlobalSettings.Instance.SelectedFigure.StartingPoint = new Point(p.X, p.Y);
         }
     }
     public class LeftStretch: Command
@@ -31,7 +31,7 @@ namespace DrawingApp.Drawing.Commands
     {
         public void Execute(Point p)
         {
-            GlobalSettings.Instance.SelectedFigure.EndingPoint = p;
+            GlobalSettings.Instance.SelectedFigure.EndingPoint = new Point(p.X, p.Y);
         }
     }
 
@@ -64,6 +64,15 @@ namespace DrawingApp.Drawing.Commands
         public void Execute(Point p)
         {
             GlobalSettings.Instance.SelectedFigure.StartingPoint.Y = p.Y;
+        }
+    }
+    public class TopLeftFixedStretch : Command
+    {
+        public void Execute(Point p)
+        {
+            int delta = GlobalSettings.Instance.SelectedFigure.StartingPoint.X - p.X;
+            GlobalSettings.Instance.SelectedFigure.StartingPoint.X =+ delta;
+            GlobalSettings.Instance.SelectedFigure.StartingPoint.Y =+ delta;
         }
     }
 }

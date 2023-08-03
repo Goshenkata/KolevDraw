@@ -7,15 +7,19 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
+using DrawingApp.Drawing;
+using System.Xml;
+
 namespace DrawingApp
 {
     public abstract class Figure : ICloneable
     {
-        private bool areControlSet;
+        protected bool areControlSet;
 
         public Point StartingPoint { get; set; } = new Point(0, 0);
         public Point EndingPoint { get; set; } = new Point(0, 0);
         public Command Command { get; set; }
+        public FigureSettings Settings { get; set; }
 
 
         public abstract void Draw(Graphics g);
@@ -26,8 +30,11 @@ namespace DrawingApp
         }
         protected Figure(Figure f)
         {
-            this.StartingPoint = f.StartingPoint;
-            this.EndingPoint = f.EndingPoint;
+            this.StartingPoint.X = f.StartingPoint.X;
+            this.StartingPoint.Y = f.StartingPoint.Y;
+            this.EndingPoint.X = f.EndingPoint.X;
+            this.EndingPoint.Y = f.EndingPoint.Y;
+            this.Settings = (FigureSettings)f.Settings.Clone(); 
         }
 
         public virtual double GetPerimeter()
@@ -45,7 +52,12 @@ namespace DrawingApp
             Size size = new Size(fig.EndingPoint.X - fig.StartingPoint.X, fig.EndingPoint.Y - fig.StartingPoint.Y);
             return new System.Drawing.Rectangle(fig.StartingPoint, size);
         }
-        protected Figure() { }
+        protected Figure()
+        {
+            this.Settings = new FigureSettings();
+            fixPoints();
+        }
+
         public abstract object Clone();
 
         public void fixPoints()
@@ -74,7 +86,7 @@ namespace DrawingApp
                 && (p.X < EndingPoint.X)
                 && (p.Y < EndingPoint.Y);
         }
-        public void SetControls(int tabIndex)
+        public virtual void SetControls(int tabIndex)
         {
             if (!areControlSet)
             {
@@ -134,6 +146,12 @@ namespace DrawingApp
                 list.Add(circleBottomRight);
                 list.Add(circleRight);
 
+                foreach(var item in list)
+                {
+                    item.Settings.FillColor = System.Drawing.Color.White;
+                    item.Settings.BorderColor = System.Drawing.Color.Gray;
+                }
+
 
                 Project.Canvases[tabIndex].SelectionFigures.AddRange(list);
                 areControlSet = true;
@@ -148,5 +166,7 @@ namespace DrawingApp
                 areControlSet = false;
             }
         }
+
+        public abstract void SeriliazeToSvg(ref XmlDocument xmlDoc);
     }
 }

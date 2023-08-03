@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace DrawingApp.Drawing.Figures
 {
@@ -14,7 +15,7 @@ namespace DrawingApp.Drawing.Figures
         {
         }
 
-        public Ellipse()
+        public Ellipse():base()
         {
         }
 
@@ -48,10 +49,40 @@ namespace DrawingApp.Drawing.Figures
 
         public override void Draw(Graphics g)
         {
-            Pen pen = new Pen(Color.Black);
-            Brush brush = new SolidBrush(Color.Blue);
+            base.fixPoints();
+            Pen pen = new Pen(this.Settings.BorderColor,this.Settings.StrokeWidth);
+            Brush brush = new SolidBrush(this.Settings.FillColor);
             g.FillEllipse(brush, this);
             g.DrawEllipse(pen, this);
+        }
+
+        public override void SeriliazeToSvg(ref XmlDocument xmlDoc)
+        {
+
+            XmlElement ellipseElement = xmlDoc.CreateElement("ellipse");
+
+            int middleX = (StartingPoint.X + EndingPoint.X) / 2;
+            int middleY = (StartingPoint.Y + EndingPoint.Y) / 2;
+            ellipseElement.SetAttribute("cx", middleX.ToString());
+            ellipseElement.SetAttribute("cy", middleY.ToString());
+            ellipseElement.SetAttribute("rx", GetXRadius().ToString());
+            ellipseElement.SetAttribute("ry", GetYRadius().ToString());
+            Settings.SerializeToAttributes(ref ellipseElement);
+
+            xmlDoc.DocumentElement.AppendChild(ellipseElement);
+        }
+
+        public Ellipse(XmlNode childNode)
+        {   
+            int cx = int.Parse(childNode.Attributes["cx"].Value);
+            int cy = int.Parse(childNode.Attributes["cy"].Value);
+            int rx = int.Parse(childNode.Attributes["rx"].Value);
+            int ry = int.Parse(childNode.Attributes["ry"].Value);
+            StartingPoint.X = cx - rx;
+            StartingPoint.Y = cy - ry;
+            EndingPoint.X = cx + rx;
+            EndingPoint.Y = cy + ry;
+            Settings = new FigureSettings(childNode);
         }
     }
 }
